@@ -23,8 +23,19 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
   int _selectedYear = DateTime.now().year;
 
   static const _monthNames = [
-    '', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    '',
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
   ];
 
   Future<void> _generateAndShare() async {
@@ -51,8 +62,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
     }
   }
 
-  Future<Uint8List> _buildPdf(
-      List<Habit> habits, int year, int month) async {
+  Future<Uint8List> _buildPdf(List<Habit> habits, int year, int month) async {
     final pdf = pw.Document();
     final green = PdfColor.fromHex('1D9E75');
     final darkGreen = PdfColor.fromHex('0F6E56');
@@ -64,11 +74,10 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
     // حساب الإحصائيات
     final daysInMonth = DateTime(year, month + 1, 0).day;
     final totalPossible = habits.length * daysInMonth;
-    final totalDone = habits.fold(
-        0, (s, h) => s + h.completedInMonth(year, month));
-    final overallPct = totalPossible > 0
-        ? (totalDone / totalPossible * 100).round()
-        : 0;
+    final totalDone =
+        habits.fold(0, (s, h) => s + h.completedInMonth(year, month));
+    final overallPct =
+        totalPossible > 0 ? (totalDone / totalPossible * 100).round() : 0;
 
     pdf.addPage(
       pw.MultiPage(
@@ -76,7 +85,6 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
         textDirection: pw.TextDirection.rtl,
         margin: const pw.EdgeInsets.all(32),
         build: (ctx) => [
-
           // ── رأس التقرير ──
           pw.Container(
             padding: const pw.EdgeInsets.all(20),
@@ -97,8 +105,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
                             color: PdfColors.white)),
                     pw.Text('تقرير العادات الشهري',
                         style: pw.TextStyle(
-                            fontSize: 14,
-                            color: PdfColors.white70)),
+                            fontSize: 14, color: PdfColors.grey200)),
                   ],
                 ),
                 pw.Column(
@@ -111,8 +118,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
                             color: PdfColors.white)),
                     pw.Text('${habits.length} عادة نشطة',
                         style: pw.TextStyle(
-                            fontSize: 12,
-                            color: PdfColors.white70)),
+                            fontSize: 12, color: PdfColors.grey200)),
                   ],
                 ),
               ],
@@ -128,8 +134,8 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
               pw.SizedBox(width: 10),
               _pdfStatCard('أيام منجزة', '$totalDone يوم', darkGreen),
               pw.SizedBox(width: 10),
-              _pdfStatCard('أيام الشهر', '$daysInMonth يوم',
-                  PdfColor.fromHex('378ADD')),
+              _pdfStatCard(
+                  'أيام الشهر', '$daysInMonth يوم', PdfColor.fromHex('378ADD')),
             ],
           ),
 
@@ -145,56 +151,61 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
 
           ...habits.map((h) {
             final done = h.completedInMonth(year, month);
-            final pct = daysInMonth > 0
-                ? (done / daysInMonth * 100).round()
-                : 0;
+            final pct =
+                daysInMonth > 0 ? (done / daysInMonth * 100).round() : 0;
 
             return pw.Container(
               margin: const pw.EdgeInsets.only(bottom: 10),
               padding: const pw.EdgeInsets.all(12),
               decoration: pw.BoxDecoration(
                 color: PdfColors.white,
-                border:
-                    pw.Border.all(color: border, width: 0.5),
+                border: pw.Border.all(color: border, width: 0.5),
                 borderRadius: pw.BorderRadius.circular(8),
               ),
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Row(
-                    mainAxisAlignment:
-                        pw.MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
                       pw.Text('${h.icon}  ${h.title}',
                           style: pw.TextStyle(
-                              fontSize: 13,
-                              fontWeight: pw.FontWeight.bold)),
+                              fontSize: 13, fontWeight: pw.FontWeight.bold)),
                       pw.Text('$done/$daysInMonth يوم ($pct%)',
-                          style: pw.TextStyle(
-                              fontSize: 12, color: green)),
+                          style: pw.TextStyle(fontSize: 12, color: green)),
                     ],
                   ),
                   pw.SizedBox(height: 8),
 
-                  // شريط التقدم
+                  // شريط التقدم (تم تعديله ليتوافق مع مكتبة الـ PDF)
                   pw.Container(
                     height: 8,
                     decoration: pw.BoxDecoration(
                       color: PdfColor.fromHex('E5E7EB'),
                       borderRadius: pw.BorderRadius.circular(4),
                     ),
-                    child: pw.FractionallySizedBox(
-                      widthFactor: done / daysInMonth,
-                      child: pw.Container(
-                        decoration: pw.BoxDecoration(
-                          color: pct >= 80
-                              ? green
-                              : pct >= 50
-                                  ? PdfColor.fromHex('EF9F27')
-                                  : PdfColor.fromHex('F09595'),
-                          borderRadius: pw.BorderRadius.circular(4),
-                        ),
-                      ),
+                    child: pw.Row(
+                      children: [
+                        if (done > 0)
+                          pw.Expanded(
+                            flex: done,
+                            child: pw.Container(
+                              decoration: pw.BoxDecoration(
+                                color: pct >= 80
+                                    ? green
+                                    : pct >= 50
+                                        ? PdfColor.fromHex('EF9F27')
+                                        : PdfColor.fromHex('F09595'),
+                                borderRadius: pw.BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        if (daysInMonth - done > 0)
+                          pw.Expanded(
+                            flex: daysInMonth - done,
+                            child: pw.SizedBox(),
+                          ),
+                      ],
                     ),
                   ),
 
@@ -219,8 +230,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
                             ? pw.Center(
                                 child: pw.Text('✓',
                                     style: pw.TextStyle(
-                                        fontSize: 8,
-                                        color: PdfColors.white)))
+                                        fontSize: 8, color: PdfColors.white)))
                             : null,
                       );
                     }),
@@ -269,8 +279,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(label,
-                style: pw.TextStyle(
-                    fontSize: 11, color: PdfColors.white70)),
+                style: pw.TextStyle(fontSize: 11, color: PdfColors.grey200)),
             pw.SizedBox(height: 4),
             pw.Text(value,
                 style: pw.TextStyle(
@@ -286,14 +295,12 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
   @override
   Widget build(BuildContext context) {
     final habits = context.watch<AppState>().habits;
-    final daysInMonth =
-        DateTime(_selectedYear, _selectedMonth + 1, 0).day;
+    final daysInMonth = DateTime(_selectedYear, _selectedMonth + 1, 0).day;
     final totalDone = habits.fold(
         0, (s, h) => s + h.completedInMonth(_selectedYear, _selectedMonth));
     final totalPossible = habits.length * daysInMonth;
-    final pct = totalPossible > 0
-        ? (totalDone / totalPossible * 100).round()
-        : 0;
+    final pct =
+        totalPossible > 0 ? (totalDone / totalPossible * 100).round() : 0;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -302,7 +309,6 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-
             // معاينة التقرير
             Container(
               padding: const EdgeInsets.all(16),
@@ -312,8 +318,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
               ),
               child: Column(
                 children: [
-                  const Text('📄',
-                      style: TextStyle(fontSize: 40)),
+                  const Text('📄', style: TextStyle(fontSize: 40)),
                   const SizedBox(height: 8),
                   const Text('تقرير شهري PDF',
                       style: TextStyle(
@@ -323,8 +328,7 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
                   const SizedBox(height: 4),
                   Text(
                     '${_monthNames[_selectedMonth]} $_selectedYear',
-                    style: const TextStyle(
-                        fontSize: 14, color: Colors.white70),
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
                   ),
                   const SizedBox(height: 16),
 
@@ -398,20 +402,12 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
             // إحصائيات سريعة للشهر المختار
             Row(
               children: [
-                _StatCard(
-                    label: 'الإنجاز الكلي',
-                    value: '$pct%',
-                    icon: '📊'),
+                _StatCard(label: 'الإنجاز الكلي', value: '$pct%', icon: '📊'),
+                const SizedBox(width: 10),
+                _StatCard(label: 'أيام منجزة', value: '$totalDone', icon: '✅'),
                 const SizedBox(width: 10),
                 _StatCard(
-                    label: 'أيام منجزة',
-                    value: '$totalDone',
-                    icon: '✅'),
-                const SizedBox(width: 10),
-                _StatCard(
-                    label: 'العادات',
-                    value: '${habits.length}',
-                    icon: '👣'),
+                    label: 'العادات', value: '${habits.length}', icon: '👣'),
               ],
             ),
 
@@ -427,22 +423,19 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
 
             ...habits.map((h) {
               final done = h.completedInMonth(_selectedYear, _selectedMonth);
-              final pct2 = daysInMonth > 0
-                  ? (done / daysInMonth * 100).round()
-                  : 0;
+              final pct2 =
+                  daysInMonth > 0 ? (done / daysInMonth * 100).round() : 0;
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: context.cardBg,
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: context.borderColor, width: 0.5),
+                  border: Border.all(color: context.borderColor, width: 0.5),
                 ),
                 child: Row(
                   children: [
-                    Text(h.icon,
-                        style: const TextStyle(fontSize: 20)),
+                    Text(h.icon, style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -457,13 +450,11 @@ class _PdfReportScreenState extends State<PdfReportScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(3),
                             child: LinearProgressIndicator(
-                              value: daysInMonth > 0
-                                  ? done / daysInMonth
-                                  : 0,
+                              value: daysInMonth > 0 ? done / daysInMonth : 0,
                               minHeight: 5,
                               backgroundColor: KhatwaTheme.border,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  pct2 >= 80
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(pct2 >= 80
                                       ? KhatwaTheme.primary
                                       : pct2 >= 50
                                           ? const Color(0xFFBA7517)
