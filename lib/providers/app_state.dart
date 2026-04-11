@@ -11,45 +11,54 @@ class AppState extends ChangeNotifier {
   UserProfile? _profile;
   ThemeMode _themeMode = ThemeMode.system;
   bool _loading = true;
+  bool _isFirstLaunch = false;
 
   List<Habit> get habits => _habits;
   UserProfile? get profile => _profile;
   ThemeMode get themeMode => _themeMode;
   bool get loading => _loading;
+  bool get isFirstLaunch => _isFirstLaunch;
 
-  // ── تهيئة التطبيق ──
   Future<void> init() async {
     _profile = await _db.getProfile();
 
+    // مستخدم جديد = لا ملف شخصي + لا بيانات
     final hasData = await _db.hasData();
-    if (!hasData) await _db.seedDefaultHabits();
+    _isFirstLaunch = _profile == null;
+
+    // للمستخدم القديم فقط — نبذر البيانات الافتراضية
+    if (!_isFirstLaunch && !hasData) {
+      await _db.seedDefaultHabits();
+    }
 
     _habits = await _db.getAllHabits();
 
     if (_profile != null) {
-      _themeMode = _parsethemeMode(_profile!.themeMode);
+      _themeMode = _parseThemeMode(_profile!.themeMode);
     }
 
     _loading = false;
     notifyListeners();
   }
 
-  ThemeMode _parsethemeMode(String mode) {
+  ThemeMode _parseThemeMode(String mode) {
     switch (mode) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.system;
+      case 'light': return ThemeMode.light;
+      case 'dark':  return ThemeMode.dark;
+      default:      return ThemeMode.system;
     }
+  }
+
+  // استدعى بعد إنهاء الـ Onboarding
+  void completeOnboarding() {
+    _isFirstLaunch = false;
+    notifyListeners();
   }
 
   // ── العادات ──
 
   Future<void> toggleDay(Habit habit, DateTime date) async {
     await _db.toggleDay(habit.id, date);
-    // تحديث الكاش المحلي بدون إعادة قراءة كل شيء
     final idx = _habits.indexWhere((h) => h.id == habit.id);
     if (idx == -1) return;
     final updated = _habits[idx].toggleDay(date);
@@ -89,11 +98,9 @@ class AppState extends ChangeNotifier {
       await _db.updateProfile(profile);
     }
     _profile = profile;
-    _themeMode = _parsethemeMode(profile.themeMode);
+    _themeMode = _parseThemeMode(profile.themeMode);
     notifyListeners();
   }
-
-  // ── الوضع الليلي ──
 
   Future<void> setThemeMode(String mode) async {
     if (_profile == null) return;
@@ -101,13 +108,14 @@ class AppState extends ChangeNotifier {
     await saveProfile(updated);
   }
 
-  // ── إعادة ضبط كل البيانات ──
+  // ── إعادة ضبط ──
 
   Future<void> resetAll() async {
     await _db.clearAll();
     _habits = [];
     _profile = null;
     _themeMode = ThemeMode.system;
+    _isFirstLaunch = true;
     notifyListeners();
   }
 }
